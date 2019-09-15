@@ -6,6 +6,7 @@ public class Ship {
     private Container[] capacity;
 
     public void loading() {
+        System.out.println("hello world");
 
     }
 
