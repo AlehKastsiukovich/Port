@@ -1,36 +1,43 @@
 package by.etc.part6.port;
 
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Semaphore;
+
 
 public class Port {
-    private Pier [] piers;
-    private Container [] capacity;
+    private final static boolean PIERSES [] = new boolean[3];
+    private static final Semaphore SEMAPHORE = new Semaphore(3);
+    private static Port port = new Port();
+    private int maxContainerNum;
+    private int containerNum;
+    private Queue<Ship> queue = new ArrayBlockingQueue<Ship>(100);
 
-    public Port(int numberOfPiers, int contCapacity) {
-        piers = new Pier[numberOfPiers];
-        for (int i = 0; i < numberOfPiers; i++) {
-            piers[i] = new Pier();
-            piers[i].setNumber(i);
-        }
+    private Port() {
 
-        capacity = new Container[contCapacity];
-        for (int i = 0; i < contCapacity; i++) {
-            capacity[i] = new Container();
-        }
     }
 
-    public Pier[] getPiers() {
-        return piers;
+    public static Port getPort() {
+        return port;
     }
 
-    public void setPiers(Pier[] piers) {
-        this.piers = piers;
+    public void addShipToQueue(Ship ship) {
+        queue.add(ship);
     }
 
-    public Container[] getCapacity() {
-        return capacity;
+    public static boolean[] getPIERSES() {
+        return PIERSES;
     }
 
-    public void setCapacity(Container[] capacity) {
-        this.capacity = capacity;
+    public static Semaphore getSEMAPHORE() {
+        return SEMAPHORE;
+    }
+
+    public void showQueue() {
+        System.out.println(queue);
+    }
+
+    public Queue<Ship> getQueue() {
+        return queue;
     }
 }
