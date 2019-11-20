@@ -5,20 +5,15 @@ import java.util.Random;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-
-public class Ship extends Thread {
-    private static final Lock LOCK = new ReentrantLock();
-    private static Random random = new Random();
+public class Ship extends Thread{
     private int shipId;
     private int maxContainerNum;
     private int containerNum;
+    private static Lock LOCK = new ReentrantLock();
+    private static Random random = new Random();
 
     public Ship(int id) {
         this.shipId = id;
-    }
-
-    public String toString() {
-        return "ship" + shipId + " * containers count: " + containerNum + "/" + maxContainerNum + "(current/max)";
     }
 
     public int getShipId() {
@@ -46,32 +41,33 @@ public class Ship extends Thread {
     }
 
     public void loading() {
-        //System.out.println(this.toString() + " loading");
-        int load = random.nextInt(maxContainerNum - containerNum) + 1;
-        System.out.println(this.toString() + " load - " + load + " containers.");
+        int load = random.nextInt(getMaxContainerNum() - getContainerNum()) + 1;
 
-        if (load > Port.getContainerNum()) {
+        System.out.println(ShipView.printShip(this) + " load - " + load + " containers.");
+
+        if (load > Port.getPort().getContainerNum()) {
             System.out.println("There is to low containers in port. Need loading");
-            Port.setContainerNum(Port.getMaxContainerNum());
+            Port.getPort().setContainerNum(Port.getPort().getMaxContainerNum());
         }
 
-        Port.setContainerNum(Port.getContainerNum() - load);
-        containerNum = containerNum + load;
+        Port.getPort().setContainerNum(Port.getPort().getContainerNum() - load);
+        setContainerNum(getContainerNum() + load);
     }
 
     public void unloading() {
-        //System.out.println(this.toString() + " unloading");
-        System.out.println("Current containers in port: " + Port.getContainerNum());
-        int unload = random.nextInt(containerNum) + 1;
-        System.out.println(this.toString() +" unload - " + unload + " containers.");
+        System.out.println("Current containers in port: " + Port.getPort().getContainerNum());
 
-        if ((Port.getContainerNum() + unload) > Port.getMaxContainerNum()) {
+        int unload = random.nextInt(getContainerNum()) + 1;
+
+        System.out.println(ShipView.printShip(this) + " unload - " + unload + " containers.");
+
+        if ((Port.getPort().getContainerNum() + unload) > Port.getPort().getMaxContainerNum()) {
             System.out.println("Port is overloaded! Try less.");
-            unload = Port.getMaxContainerNum() - Port.getContainerNum();
+            unload = Port.getPort().getMaxContainerNum() - Port.getPort().getContainerNum();
         }
 
-        Port.setContainerNum(Port.getContainerNum() + unload);
-        containerNum = containerNum - unload;
+        Port.getPort().setContainerNum(Port.getPort().getContainerNum() + unload);
+        setContainerNum(getContainerNum() - unload);
     }
 
     public static Ship generateShip(int i) {
@@ -84,14 +80,14 @@ public class Ship extends Thread {
     }
 
     public void loadAndUnload() {
-       // System.out.println(this.toString() +" unloading and then loading");
-
         unloading();
+
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         loading();
     }
 
@@ -108,9 +104,9 @@ public class Ship extends Thread {
     }
 
     public void generateTask() {
-        if (this.getContainerNum() == 0) {
+        if (getContainerNum() == 0) {
             loading();
-        } else if (Port.getContainerNum() == Port.getMaxContainerNum()) {
+        } else if (Port.getPort().getContainerNum() == Port.getPort().getMaxContainerNum()) {
             loading();
         } else {
             randomizeDecision();
@@ -118,7 +114,8 @@ public class Ship extends Thread {
     }
 
     public void workInPort() {
-        System.out.println(this.toString() + " arrived to the port and waiting.");
+
+        System.out.println(ShipView.printShip(this) + " arrived to the port and waiting.");
 
         int numberOfPierse = -1;
 
@@ -131,10 +128,10 @@ public class Ship extends Thread {
         LOCK.lock();
 
         for (int i = 0; i < 3; i++) {
-            if (!Port.getPIERSES()[i]) {
-                Port.getPIERSES()[i] = true;
+            if (!Port.getPort().getPIERSES()[i]) {
+                Port.getPort().getPIERSES()[i] = true;
                 numberOfPierse = i;
-                System.out.println(this.toString() + " arrived to the piers #" + numberOfPierse);
+                System.out.println(ShipView.printShip(this) + " arrived to the piers #" + numberOfPierse);
                 break;
             }
         }
@@ -150,9 +147,9 @@ public class Ship extends Thread {
         }
 
         LOCK.lock();
-        Port.getPIERSES()[numberOfPierse] = false;
+        Port.getPort().getPIERSES()[numberOfPierse] = false;
         LOCK.unlock();
-        System.out.println(this.toString() + " leaves pierse #" + numberOfPierse);
+        System.out.println(ShipView.printShip(this) + " leaves pierse #" + numberOfPierse);
 
         Port.getSEMAPHORE().release();
     }
@@ -160,5 +157,9 @@ public class Ship extends Thread {
     @Override
     public void run() {
         workInPort();
+    }
+
+    public String toString() {
+        return "ship" + shipId + " * containers count: " + containerNum + "/" + maxContainerNum + "(current/max)";
     }
 }
